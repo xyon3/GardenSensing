@@ -8,9 +8,9 @@ import { NextResponse, type NextRequest } from "next/server";
  */
 export async function GET(
     request: NextRequest,
-    { context }: { context: Promise<{ did: string }> }
+    context: { params: Promise<{ did: string }> }
 ) {
-    const { did } = await context;
+    const { did } = await context.params;
 
     let query: FirebaseFirestore.Query = firestore().collection("sense");
 
