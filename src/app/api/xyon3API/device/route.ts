@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
         did: requestBody.did,
         dnm: requestBody.dnm,
         ip4: requestBody.ip4,
+        sts: 0,
     };
 
     try {

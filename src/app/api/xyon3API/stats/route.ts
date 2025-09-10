@@ -10,6 +10,15 @@ import {
 
 import sampleData from "@/sensor_data_feb_to_sep_2025.json";
 
+/*
+ * Action: Get chart stats
+ * Headers:
+ *  - x-environment
+ *
+ * Query Params:
+ *  - deviceID
+ *
+ */
 export async function GET(request: NextRequest) {
     const params = request.nextUrl.searchParams;
 
