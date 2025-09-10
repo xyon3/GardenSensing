@@ -7,13 +7,8 @@ import { NextResponse, type NextRequest } from "next/server";
  * Action: Get device latest reading
  */
 export async function GET(
-<<<<<<< Updated upstream
-    _: NextRequest,
-    { params }: { params: { did: string } }
-=======
     request: NextRequest,
     { context }: { context: Promise<{ did: string }> }
->>>>>>> Stashed changes
 ) {
     const { did } = await context;
 
