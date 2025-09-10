@@ -1,4 +1,5 @@
-import { SenseInformation } from "../schemas/sense";
+import { Dayjs } from "dayjs";
+import { SenseInformation, SenseStore } from "../schemas/sense";
 
 export function convertTimeUnixISO(timestamp: number, offset: number = 8) {
     return new Date(timestamp * 1000 + 3600 * 1000 * offset)
@@ -13,6 +14,126 @@ export function convertTimeISOUnix(
 ) {
     return new Date(timestring).getTime() / 1000;
     // return new Date(timestring).getTime() / 1000 + 3600 * offset;
+}
+
+export function getAveragePerDay(
+    senseData: SenseStore[] | null,
+    currentDate: Dayjs
+) {
+    const numberOfDays = Array.from({ length: 7 }, (_, i) => i);
+
+    let startDay: Dayjs;
+    let endDay: Dayjs;
+
+    return numberOfDays.map((_) => {
+        startDay = currentDate.startOf("day");
+        endDay = currentDate.endOf("day");
+
+        let dayData =
+            senseData &&
+            senseData.filter(
+                (data) =>
+                    data.dtm >= startDay.unix() && data.dtm <= endDay.unix()
+            );
+
+        let toBeStored = {
+            date: startDay.format("YYYY-MM-DD"),
+            average: {
+                temperature:
+                    (dayData?.reduce((total, data) => total + data.tmp, 0) ??
+                        0) / (dayData?.length ?? 0),
+                relativeHumidity: Math.floor(
+                    (dayData?.reduce((total, data) => total + data.rhu, 0) ??
+                        0) / (dayData?.length ?? 0)
+                ),
+            },
+        };
+
+        currentDate = currentDate.subtract(1, "day");
+
+        return toBeStored;
+    });
+}
+
+export function getAveragePerWeek(
+    senseData: SenseStore[] | null,
+    currentDate: Dayjs
+) {
+    const numberOfWeeks = Array.from({ length: 7 }, (_, i) => i);
+
+    let startWeek: Dayjs;
+    let endWeek: Dayjs;
+
+    return numberOfWeeks.map((_) => {
+        startWeek = currentDate.startOf("week");
+        endWeek = currentDate.endOf("week");
+
+        let weekData =
+            senseData &&
+            senseData.filter(
+                (data) =>
+                    data.dtm >= startWeek.unix() && data.dtm <= endWeek.unix()
+            );
+
+        let toBeStored = {
+            startOfWeek: startWeek.format("YYYY-MM-DD"),
+            endOfWeek: endWeek.format("YYYY-MM-DD"),
+            average: {
+                temperature:
+                    (weekData?.reduce((total, data) => total + data.tmp, 0) ??
+                        0) / (weekData?.length ?? 0),
+                relativeHumidity: Math.floor(
+                    (weekData?.reduce((total, data) => total + data.rhu, 0) ??
+                        0) / (weekData?.length ?? 0)
+                ),
+            },
+        };
+
+        currentDate = currentDate.subtract(1, "week");
+
+        return toBeStored;
+    });
+}
+
+export function getAveragePerMonth(
+    senseData: SenseStore[] | null,
+    sixMonthsAgo: Dayjs
+) {
+    const numberOfMonths = Array.from({ length: 6 }, (_, i) => i);
+
+    let currentMonth = sixMonthsAgo;
+    let startMonth: Dayjs;
+    let endMonth: Dayjs;
+
+    return numberOfMonths.map((_) => {
+        startMonth = currentMonth.startOf("month");
+        endMonth = currentMonth.endOf("month");
+
+        let monthData =
+            senseData &&
+            senseData.filter(
+                (data) =>
+                    data.dtm >= startMonth.unix() && data.dtm <= endMonth.unix()
+            );
+
+        let toBeStored = {
+            month: endMonth.month() + 1,
+            endOfMonth: endMonth.format("YYYY-MM-DD"),
+            average: {
+                temperature:
+                    (monthData?.reduce((total, data) => total + data.tmp, 0) ??
+                        0) / (monthData?.length ?? 0),
+                relativeHumidity: Math.floor(
+                    (monthData?.reduce((total, data) => total + data.rhu, 0) ??
+                        0) / (monthData?.length ?? 0)
+                ),
+            },
+        };
+
+        currentMonth = currentMonth.add(1, "month");
+
+        return toBeStored;
+    });
 }
 
 /**
