@@ -20,8 +20,6 @@ export function middleware(request: NextRequest) {
     }
 
     return NextResponse.next({ headers });
-
-    return new NextResponse("Forbidden", { status: 403 });
 }
 
 // Optional: Configure the matcher to apply middleware only to API routes
