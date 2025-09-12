@@ -21,8 +21,3 @@ export function middleware(request: NextRequest) {
 
     return NextResponse.next({ headers });
 }
-
-// Optional: Configure the matcher to apply middleware only to API routes
-export const config = {
-    matcher: ["/api/*"], // Apply middleware only to API routes
-};
