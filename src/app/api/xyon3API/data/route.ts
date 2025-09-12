@@ -3,6 +3,8 @@ import validateBody from "../../lib/validateBody";
 import firestore from "../../lib/firestore";
 import { SenseStore } from "../../schemas/sense";
 import { computeSenseInformation, convertTimeISOUnix } from "../../lib/helpers";
+import { db } from "../../lib/firebase";
+import { ref, onValue, off, push, set } from "firebase/database";
 
 /*
  * Action: Get sense data with optional date range query
@@ -94,8 +96,10 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(validated, { status: 400 });
     }
 
+    const dtm = Math.floor(new Date(Date.now()).getTime() / 1000); // convert unix timestamp
+
     const newSense: SenseStore = {
-        dtm: Math.floor(new Date(Date.now()).getTime() / 1000), // convert unix timestamp
+        dtm,
         did: requestBody.did,
         rhu: requestBody.rhu,
         tmp: requestBody.tmp,
@@ -113,6 +117,15 @@ export async function POST(request: NextRequest) {
                 );
                 console.log("\n");
             });
+
+        const latesttmpRef = ref(db, "latesttmp");
+        const newTemperatureRef = push(latesttmpRef);
+
+        await set(latesttmpRef, null);
+
+        await set(newTemperatureRef, {
+            ...computeSenseInformation(dtm, requestBody.tmp, requestBody.rhu),
+        });
 
         return NextResponse.json({}, { status: 201 });
     } catch (err) {
