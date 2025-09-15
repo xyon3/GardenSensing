@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
         tid: randomUUID().toString().split("-")[0],
         pln: requestBody.pln,
         thr: requestBody.thr,
+        sts: 0,
     };
 
     try {
@@ -51,6 +52,55 @@ export async function POST(request: NextRequest) {
         console.error(err);
         return NextResponse.json(
             { message: "COULD_NOT_ADD_OR_UPDATE" },
+            { status: 500 }
+        );
+    }
+}
+
+/*
+ * Action: Update existing threshold configuration
+ */
+export async function PUT(request: NextRequest) {
+    const requestBody = await request.json();
+    const requiredData = ["tid"];
+
+    const validated = validateBody(requiredData, requestBody);
+
+    if (validated.message !== "PROCEED") {
+        return NextResponse.json(validated, { status: 400 });
+    }
+
+    const { tid, thr } = requestBody;
+
+    try {
+        const thresholdDocRef = firestore().collection("threshold").doc(tid);
+
+        // Get the current document to check if it exists
+        const docSnapshot = await thresholdDocRef.get();
+
+        if (!docSnapshot.exists) {
+            return NextResponse.json(
+                { message: "THRESHOLD_NOT_FOUND" },
+                { status: 404 }
+            );
+        }
+
+        const prevData = docSnapshot.data();
+
+        // Update the threshold value and status if needed
+        const updatedThreshold = {
+            thr: requestBody.thr ? requestBody.thr : prevData?.thr,
+            pln: requestBody.pln ? requestBody.pln : prevData?.pln,
+            sts: parseInt(requestBody.sts),
+        };
+
+        await thresholdDocRef.update(updatedThreshold);
+
+        return NextResponse.json({ message: "UPDATED" }, { status: 200 });
+    } catch (err) {
+        console.error(err);
+        return NextResponse.json(
+            { message: "COULD_NOT_UPDATE" },
             { status: 500 }
         );
     }
